@@ -17,7 +17,10 @@ Repo **private** chứa các công cụ tính toán tài chính cá nhân cho th
 
 ## Danh mục công cụ (22)
 
-Chi tiết thiết kế: [`docs/CATALOG.md`](docs/CATALOG.md)
+Chi tiết thiết kế: [`docs/CATALOG.md`](docs/CATALOG.md)  
+Đối chiếu Tháp Tài Sản: [`docs/DOI_CHIEU_THAP.md`](docs/DOI_CHIEU_THAP.md)
+
+**Vị trí local:** `odoo17/tai-chinh-ca-nhan/` (repo Git riêng, private trên GitHub).
 
 ### Lương - Bảo Hiểm - Thuế
 1. `luong_gross_net` — Gross ↔ Net (TNCN 5 bậc 2026)
