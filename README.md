@@ -71,8 +71,10 @@ Chi tiết: [`docs/SETUP_VAULT.md`](docs/SETUP_VAULT.md)
 ./scripts/run_web.sh      # UI  http://127.0.0.1:5174
 ```
 
-Deploy Pages: push `main` → workflow `.github/workflows/pages.yml`
-→ `https://<user>.github.io/tai-chinh-ca-nhan/`
+Deploy Pages hiện tại: nhánh `gh-pages` (build local rồi push static).
+URL: https://truongdinh018.github.io/tai-chinh-ca-nhan/
+
+> GitHub Actions (`.github/workflows/pages.yml`) tạm không chạy được vì account bị khóa billing.
 
 CLI / Excel (máy tính Python) vẫn như cũ bên dưới.
 ## Cài đặt
