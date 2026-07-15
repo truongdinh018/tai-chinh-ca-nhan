@@ -1,0 +1,89 @@
+{
+  "assets": [
+    {
+      "name": "SJC",
+      "type": "gold",
+      "quantity": 2,
+      "unit": "luong",
+      "cost_vnd": 180000000,
+      "current_value_vnd": 190000000,
+      "note": "sample"
+    },
+    {
+      "name": "FPT",
+      "type": "stock",
+      "quantity": 500,
+      "unit": "cp",
+      "cost_vnd": 50000000,
+      "current_value_vnd": 62000000,
+      "note": "sample"
+    },
+    {
+      "name": "Can_ho_Q7",
+      "type": "real_estate",
+      "quantity": 1,
+      "unit": "can",
+      "cost_vnd": 2500000000,
+      "current_value_vnd": 2800000000,
+      "note": "sample"
+    }
+  ],
+  "transactions": [
+    {
+      "date": "2026-07-01",
+      "amount_vnd": 25000000,
+      "category": "salary",
+      "direction": "in",
+      "note": "Lương tháng 7",
+      "asset_id": null
+    },
+    {
+      "date": "2026-07-05",
+      "amount_vnd": 4500000,
+      "category": "food",
+      "direction": "out",
+      "note": "Ăn uống",
+      "asset_id": null
+    },
+    {
+      "date": "2026-07-10",
+      "amount_vnd": 2000000,
+      "category": "transport",
+      "direction": "out",
+      "note": "Xăng xe",
+      "asset_id": null
+    }
+  ],
+  "salary": [
+    {
+      "period_ym": "2026-07",
+      "gross": 30000000,
+      "net": 24500000,
+      "dependents": 1,
+      "note": "sample"
+    },
+    {
+      "period_ym": "2026-06",
+      "gross": 30000000,
+      "net": 24500000,
+      "dependents": 1,
+      "note": "sample"
+    }
+  ],
+  "debts": [
+    {
+      "name": "Vay mua nhà",
+      "principal_vnd": 800000000,
+      "balance_vnd": 720000000,
+      "rate_year": 8.5,
+      "note": "sample"
+    },
+    {
+      "name": "Thẻ tín dụng",
+      "principal_vnd": 15000000,
+      "balance_vnd": 8500000,
+      "rate_year": 24,
+      "note": "sample"
+    }
+  ]
+}

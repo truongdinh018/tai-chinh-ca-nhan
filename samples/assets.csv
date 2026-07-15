@@ -1,0 +1,4 @@
+name,type,quantity,unit,cost_vnd,current_value_vnd,note
+SJC,gold,2,luong,180000000,190000000,sample
+FPT,stock,500,cp,50000000,62000000,sample
+Can_ho_Q7,real_estate,1,can,2500000000,2800000000,sample

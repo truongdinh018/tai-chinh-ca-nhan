@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/tai-chinh-ca-nhan/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Tài chính cá nhân</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      try {
+        var th = localStorage.getItem('finance-theme')
+        if (th !== 'light' && th !== 'dark') {
+          th = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        }
+        document.documentElement.setAttribute('data-theme', th)
+        var loc = localStorage.getItem('finance-locale')
+        if (loc === 'en' || loc === 'vi') document.documentElement.lang = loc
+      } catch (e) {}
+    </script>
+    <style>
+      html, body, #root { margin: 0; min-height: 100%; }
+      #boot {
+        font-family: Nunito, system-ui, sans-serif;
+        padding: 2rem;
+        color: #794f27;
+        background: linear-gradient(180deg, #bfe9f2 0%, #dff5ef 28%, #f4efd8 62%, #efe3c0 100%);
+        min-height: 100vh;
+        box-sizing: border-box;
+      }
+      html[data-theme='dark'] #boot {
+        color: #f2e6c9;
+        background: linear-gradient(180deg, #070b12 0%, #101822 38%, #152018 78%, #1a2118 100%);
+      }
+      #boot[data-done] { display: none; }
+    </style>
+    <script type="module" crossorigin src="/tai-chinh-ca-nhan/assets/index-TI_4xPxz.js"></script>
+    <link rel="stylesheet" crossorigin href="/tai-chinh-ca-nhan/assets/index-CCbKX2vS.css">
+  </head>
+  <body>
+    <div id="boot">Loading…</div>
+    <div id="root"></div>
+  </body>
+</html>
