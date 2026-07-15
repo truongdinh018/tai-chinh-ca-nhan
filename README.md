@@ -1,6 +1,6 @@
 # Tài chính cá nhân VN — Bộ máy tính (kiểu Tháp Tài Sản)
 
-Repo **private** chứa các công cụ tính toán tài chính cá nhân cho thị trường Việt Nam,
+Repo **public** chứa các công cụ tính toán tài chính cá nhân cho thị trường Việt Nam,
 để bạn (và Cursor/Claude) chạy local trên data của mình, rồi xuất kết quả ra **Excel**.
 
 > Kết quả mang tính **tham khảo**. Không phải tư vấn pháp lý / thuế / đầu tư.
@@ -10,7 +10,8 @@ Repo **private** chứa các công cụ tính toán tài chính cá nhân cho th
 | Lớp | Vai trò |
 |-----|---------|
 | `tools/` | Công thức & máy tính (Python) |
-| `data/private/` | Data thật của bạn (**không commit**) |
+| `server/` + `web/` | Island Vault UI — SQLCipher + CRUD (local) |
+| `data/private/` | Data thật / vault DB (**không commit**) |
 | `data/samples/` | Input mẫu an toàn để demo |
 | `output/` / `excel/` | File Excel kết quả |
 | `AGENTS.md` | Hướng dẫn cho AI agent |
@@ -20,7 +21,9 @@ Repo **private** chứa các công cụ tính toán tài chính cá nhân cho th
 Chi tiết thiết kế: [`docs/CATALOG.md`](docs/CATALOG.md)  
 Đối chiếu Tháp Tài Sản: [`docs/DOI_CHIEU_THAP.md`](docs/DOI_CHIEU_THAP.md)
 
-**Vị trí local:** `odoo17/tai-chinh-ca-nhan/` (repo Git riêng, private trên GitHub).
+**Vị trí local:** `odoo17/tai-chinh-ca-nhan/` (repo Git riêng, public trên GitHub).
+
+**GitHub Pages:** https://truongdinh018.github.io/tai-chinh-ca-nhan/
 
 ### Lương - Bảo Hiểm - Thuế
 1. `luong_gross_net` — Gross ↔ Net (TNCN 5 bậc 2026)
@@ -56,16 +59,32 @@ Chi tiết thiết kế: [`docs/CATALOG.md`](docs/CATALOG.md)
 ### Gia Đình
 22. `chi_phi_nuoi_con` — Chi phí 0–18 tuổi
 
+## Web app (mở — không login / GitHub Pages)
+
+UI Animal Island + dữ liệu **JSON trên trình duyệt** (IndexedDB, không SQLite/password).
+Tools chạy bằng **Pyodide** (cùng file `tools/*.py`).
+Tuỳ chọn: import Google Sheet public + ghi lại qua Apps Script webhook.
+
+Chi tiết: [`docs/SETUP_VAULT.md`](docs/SETUP_VAULT.md)
+
+```bash
+./scripts/run_web.sh      # UI  http://127.0.0.1:5174
+```
+
+Deploy Pages: push `main` → workflow `.github/workflows/pages.yml`
+→ `https://<user>.github.io/tai-chinh-ca-nhan/`
+
+CLI / Excel (máy tính Python) vẫn như cũ bên dưới.
 ## Cài đặt
 
 ```bash
 cd tai-chinh-ca-nhan
 # Khuyến nghị dùng uv (nhanh):
-uv venv .venv && source .venv/bin/activate && uv pip install -r requirements.txt
-# hoặc: python3 -m venv .venv && pip install -r requirements.txt
+uv venv .venv --python 3.12 && source .venv/bin/activate && uv pip install -r requirements.txt
+cd web && npm install && cd ..
 ```
 
-## Chạy nhanh
+## Chạy nhanh (CLI)
 
 ```bash
 # Liệt kê tool
@@ -98,12 +117,14 @@ File Excel:
    ```
 2. Sửa số liệu thật trong `data/private/` (đã gitignore).
 3. Trong Cursor: *“Đọc AGENTS.md, chạy tool X với data private, cập nhật Excel.”*
+   Hoặc dùng Island Vault UI (SQLCipher) — xem `docs/SETUP_VAULT.md`.
 
 ## Bảo mật
 
 - Repo này nên để **private** trên GitHub.
-- Không commit sao kê ngân hàng, CCCD, mật khẩu.
+- Không commit sao kê ngân hàng, CCCD, mật khẩu, `finance.db`, `vault.salt`.
 - `data/private/` và `output/` đã nằm trong `.gitignore`.
+- Vault: **mất password ≈ mất dữ liệu mã hóa**.
 
 ## Giả định thuế 2026
 

@@ -19,6 +19,13 @@ venv/
 .coverage
 htmlcov/
 
+# Web / local build artifacts
+web/node_modules/
+web/dist/
+web/public/py/
+web/public/samples/
+.local/
+
 # OS / IDE
 .DS_Store
 .idea/

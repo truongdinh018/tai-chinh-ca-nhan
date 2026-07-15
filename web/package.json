@@ -1,0 +1,39 @@
+{
+  "name": "tai-chinh-island",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "sync-public": "bash ../scripts/sync_web_public.sh",
+    "predev": "npm run sync-public",
+    "prebuild": "npm run sync-public",
+    "dev": "vite --host 0.0.0.0 --port 5174 --strictPort",
+    "build": "tsc -b && vite build",
+    "build:pages": "VITE_BASE=/tai-chinh-ca-nhan/ npm run build",
+    "preview": "vite preview --host 127.0.0.1 --port 5174"
+  },
+  "dependencies": {
+    "animal-island-ui": "^1.2.3",
+    "classnames": "^2.5.1",
+    "idb-keyval": "^6.3.0",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.2",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.3",
+    "fake-indexeddb": "^6.2.5",
+    "jsdom": "^29.1.1",
+    "less": "^4.6.7",
+    "oxlint": "^1.71.0",
+    "playwright": "^1.61.1",
+    "tsx": "^4.23.1",
+    "typescript": "~6.0.2",
+    "vite": "^8.1.1"
+  }
+}

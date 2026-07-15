@@ -1,0 +1,146 @@
+{
+  "luong_gross_net": {
+    "gross": 20000000,
+    "dependents": 1,
+    "region": "I"
+  },
+  "quyet_toan_tncn": {
+    "tong_thu_nhap_nam": 240000000,
+    "bao_hiem_nam": 25200000,
+    "so_nguoi_phu_thuoc": 1,
+    "thue_da_khau_tru": 8000000
+  },
+  "bao_hiem_that_nghiep": {
+    "luong_binh_quan_6_thang": 15000000,
+    "so_thang_dong_bhtn": 36
+  },
+  "bao_hiem_huu_tri": {
+    "luong_binh_quan_dong": 15000000,
+    "so_nam_dong": 20,
+    "dong_tu_nguyen_thang": 2000000
+  },
+  "gia_vang_loi_lo": {
+    "so_luong": 2,
+    "don_vi": "luong",
+    "gia_mua": 90000000,
+    "gia_hien_tai": 95000000
+  },
+  "dca": {
+    "so_tien_moi_thang": 5000000,
+    "so_thang": 120,
+    "loi_suat_nam": 0.1
+  },
+  "quy_du_phong": {
+    "chi_tieu_thang": 15000000,
+    "so_thang_muc_tieu": 6,
+    "so_tien_hien_co": 40000000,
+    "tiet_kiem_moi_thang": 5000000
+  },
+  "ty_gia": {
+    "so_tien": 1000,
+    "ty_gia": 25500,
+    "currency": "USD"
+  },
+  "so_sanh_dau_tu_vs_tiet_kiem": {
+    "von": 100000000,
+    "so_nam": 10
+  },
+  "tiet_kiem_vs_lam_phat": {
+    "von": 100000000,
+    "so_nam": 10
+  },
+  "diem_suc_khoe": {
+    "thu_nhap_thang": 30000000,
+    "chi_tieu_thang": 18000000,
+    "quy_du_phong": 90000000,
+    "tong_no": 200000000,
+    "tra_no_thang": 8000000,
+    "tai_san_dau_tu": 300000000,
+    "co_bao_hiem": true
+  },
+  "rui_ro_tai_chinh": {
+    "thu_nhap_thang": 30000000,
+    "chi_tieu_thang": 22000000,
+    "quy_du_phong": 20000000,
+    "ty_trong_tai_san_rui_ro": 0.6
+  },
+  "fire": {
+    "chi_tieu_nam": 240000000,
+    "tai_san_hien_tai": 800000000,
+    "tiet_kiem_nam": 120000000
+  },
+  "barista_fire": {
+    "chi_tieu_nam": 240000000,
+    "thu_nhap_part_time_nam": 120000000,
+    "tai_san_hien_tai": 500000000
+  },
+  "mua_vs_thue_nha": {
+    "gia_nha": 3000000000,
+    "von_tu_co": 900000000,
+    "lai_vay_nam": 0.09,
+    "so_nam_vay": 20,
+    "thue_thang": 15000000,
+    "so_nam_so_sanh": 10
+  },
+  "ty_le_no_dti": {
+    "thu_nhap_thang": 30000000,
+    "tong_tra_no_thang": 10000000
+  },
+  "snowball_avalanche": {
+    "debts": [
+      {
+        "name": "the",
+        "balance": 30000000,
+        "apr": 0.25,
+        "min_payment": 2000000
+      },
+      {
+        "name": "vay_xe",
+        "balance": 80000000,
+        "apr": 0.12,
+        "min_payment": 3000000
+      }
+    ],
+    "extra_payment": 2000000
+  },
+  "vay_mua_xe": {
+    "gia_xe": 700000000,
+    "tra_truoc": 200000000,
+    "lai_vay_nam": 0.1,
+    "so_thang": 48,
+    "bao_hiem_nam": 8000000,
+    "xang_thang": 3000000,
+    "bao_duong_nam": 5000000
+  },
+  "so_sanh_khoan_vay": {
+    "loans": [
+      {
+        "name": "NH_A",
+        "principal": 500000000,
+        "apr": 0.09,
+        "months": 60
+      },
+      {
+        "name": "NH_B",
+        "principal": 500000000,
+        "apr": 0.095,
+        "months": 48
+      }
+    ]
+  },
+  "lai_the_tin_dung": {
+    "du_no": 20000000,
+    "lai_suat_nam": 0.28,
+    "so_thang": 12
+  },
+  "appreciation_bds": {
+    "gia_mua": 2000000000,
+    "so_nam": 5,
+    "ty_le_tang_nam": 0.06
+  },
+  "chi_phi_nuoi_con": {
+    "chi_phi_thang_hien_tai": 12000000,
+    "tuoi_hien_tai": 0,
+    "tuoi_ket_thuc": 18
+  }
+}
