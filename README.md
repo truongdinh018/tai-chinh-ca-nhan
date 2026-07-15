@@ -1,29 +1,28 @@
 # Tài chính cá nhân VN — Bộ máy tính (kiểu Tháp Tài Sản)
 
-Repo **public** chứa các công cụ tính toán tài chính cá nhân cho thị trường Việt Nam,
-để bạn (và Cursor/Claude) chạy local trên data của mình, rồi xuất kết quả ra **Excel**.
+Repo **public** chứa công cụ tính toán tài chính cá nhân cho thị trường Việt Nam:
+chạy local (CLI + Excel), hoặc dùng **web app** trên trình duyệt / [GitHub Pages](https://truongdinh018.github.io/tai-chinh-ca-nhan/).
 
 > Kết quả mang tính **tham khảo**. Không phải tư vấn pháp lý / thuế / đầu tư.
 
-## Mục tiêu thiết kế
+## Kiến trúc
 
 | Lớp | Vai trò |
 |-----|---------|
-| `tools/` | Công thức & máy tính (Python) |
-| `server/` + `web/` | Island Vault UI — SQLCipher + CRUD (local) |
-| `data/private/` | Data thật / vault DB (**không commit**) |
+| `tools/` | Công thức & máy tính (Python) — dùng chung CLI và Pyodide |
+| `web/` | Animal Island UI — dữ liệu **IndexedDB** trên trình duyệt, không login |
+| `server/` | (Tuỳ chọn) FastAPI + SQLCipher local — **không** đồng bộ với IndexedDB |
+| `data/private/` | Data thật / vault DB CLI (**không commit**) |
 | `data/samples/` | Input mẫu an toàn để demo |
 | `output/` / `excel/` | File Excel kết quả |
 | `AGENTS.md` | Hướng dẫn cho AI agent |
 
+Chi tiết web: [`docs/SETUP_VAULT.md`](docs/SETUP_VAULT.md)  
+Catalog tool: [`docs/CATALOG.md`](docs/CATALOG.md) · Đối chiếu Tháp: [`docs/DOI_CHIEU_THAP.md`](docs/DOI_CHIEU_THAP.md)
+
+**Vị trí local:** `odoo17/tai-chinh-ca-nhan/` (repo Git riêng).
+
 ## Danh mục công cụ (22)
-
-Chi tiết thiết kế: [`docs/CATALOG.md`](docs/CATALOG.md)  
-Đối chiếu Tháp Tài Sản: [`docs/DOI_CHIEU_THAP.md`](docs/DOI_CHIEU_THAP.md)
-
-**Vị trí local:** `odoo17/tai-chinh-ca-nhan/` (repo Git riêng, public trên GitHub).
-
-**GitHub Pages:** https://truongdinh018.github.io/tai-chinh-ca-nhan/
 
 ### Lương - Bảo Hiểm - Thuế
 1. `luong_gross_net` — Gross ↔ Net (TNCN 5 bậc 2026)
@@ -59,29 +58,31 @@ Chi tiết thiết kế: [`docs/CATALOG.md`](docs/CATALOG.md)
 ### Gia Đình
 22. `chi_phi_nuoi_con` — Chi phí 0–18 tuổi
 
-## Web app (mở — không login / GitHub Pages)
+## Web app (không login)
 
-UI Animal Island + dữ liệu **JSON trên trình duyệt** (IndexedDB, không SQLite/password).
-Tools chạy bằng **Pyodide** (cùng file `tools/*.py`).
+UI Animal Island + JSON trong **IndexedDB** (mỗi máy / trình duyệt).
+Tools chạy bằng **Pyodide** (cùng `tools/*.py`).
 Tuỳ chọn: import Google Sheet public + ghi lại qua Apps Script webhook.
 
-Chi tiết: [`docs/SETUP_VAULT.md`](docs/SETUP_VAULT.md)
-
 ```bash
-./scripts/run_web.sh      # UI  http://127.0.0.1:5174
+./scripts/run_web.sh      # http://127.0.0.1:5174
 ```
 
-Deploy Pages hiện tại: nhánh `gh-pages` (build local rồi push static).
-URL: https://truongdinh018.github.io/tai-chinh-ca-nhan/
+**Live:** https://truongdinh018.github.io/tai-chinh-ca-nhan/
 
-> GitHub Actions (`.github/workflows/pages.yml`) tạm không chạy được vì account bị khóa billing.
+Deploy: workflow [`.github/workflows/pages.yml`](.github/workflows/pages.yml) (push `web/` / `tools/` lên `main`), hoặc build local rồi push nhánh `gh-pages`.
 
-CLI / Excel (máy tính Python) vẫn như cũ bên dưới.
+Server SQLCipher (tuỳ chọn, offline riêng):
+
+```bash
+./scripts/run_server.sh   # http://127.0.0.1:8787
+```
+
 ## Cài đặt
 
 ```bash
 cd tai-chinh-ca-nhan
-# Khuyến nghị dùng uv (nhanh):
+# Khuyến nghị dùng uv:
 uv venv .venv --python 3.12 && source .venv/bin/activate && uv pip install -r requirements.txt
 cd web && npm install && cd ..
 ```
@@ -110,23 +111,24 @@ File Excel:
 - `output/ket_qua_latest.xlsx` — lần chạy mới nhất (gitignored)
 - `output/ket_qua_YYYYMMDD_HHMMSS.xlsx` — bản có timestamp
 
-## Đưa data thật vào để AI tính
+## Data thật (CLI / AI)
 
 1. Copy mẫu:
    ```bash
    mkdir -p data/private
    cp data/samples/assets.csv data/private/
    ```
-2. Sửa số liệu thật trong `data/private/` (đã gitignore).
+2. Sửa số liệu trong `data/private/` (đã gitignore).
 3. Trong Cursor: *“Đọc AGENTS.md, chạy tool X với data private, cập nhật Excel.”*
-   Hoặc dùng Island Vault UI (SQLCipher) — xem `docs/SETUP_VAULT.md`.
+
+Web app giữ data trên IndexedDB / Google Sheet của bạn — xem [`docs/SETUP_VAULT.md`](docs/SETUP_VAULT.md).
 
 ## Bảo mật
 
-- Repo này nên để **private** trên GitHub.
-- Không commit sao kê ngân hàng, CCCD, mật khẩu, `finance.db`, `vault.salt`.
-- `data/private/` và `output/` đã nằm trong `.gitignore`.
-- Vault: **mất password ≈ mất dữ liệu mã hóa**.
+- Code **public**; số liệu cá nhân **không** đưa lên Git.
+- Không commit sao kê, CCCD, mật khẩu, `finance.db`, `vault.salt`.
+- `data/private/` và `output/` đã trong `.gitignore`.
+- Vault SQLCipher (nếu dùng `server/`): **mất password ≈ mất dữ liệu mã hóa**.
 
 ## Giả định thuế 2026
 
