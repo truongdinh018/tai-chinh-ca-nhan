@@ -30,14 +30,27 @@ function normalizeAssets(rows: Array<Record<string, unknown>> | undefined) {
 function normalizeTransactions(rows: Array<Record<string, unknown>> | undefined) {
   if (!rows?.length) return undefined
   return rows.map((r) => {
-    const dir = str(r.direction, 'out')
+    const dirRaw = str(r.direction, 'out')
+    const direction =
+      dirRaw === 'in' ? 'in' : dirRaw === 'transfer' ? 'transfer' : 'out'
     return {
       date: str(r.date, new Date().toISOString().slice(0, 10)),
       amount_vnd: num(r.amount_vnd),
       category: str(r.category),
-      direction: (dir === 'in' ? 'in' : 'out') as 'in' | 'out',
+      direction,
       note: str(r.note),
       asset_id: r.asset_id == null || r.asset_id === '' ? null : num(r.asset_id),
+      account_id: r.account_id == null || r.account_id === '' ? null : num(r.account_id),
+      to_account_id: r.to_account_id == null || r.to_account_id === '' ? null : num(r.to_account_id),
+      tag_ids: Array.isArray(r.tag_ids)
+        ? (r.tag_ids as unknown[]).map((x) => num(x)).filter((n) => Number.isFinite(n))
+        : typeof r.tag_ids === 'string' && r.tag_ids
+          ? String(r.tag_ids)
+              .split(/[|,]/)
+              .map((x) => num(x))
+              .filter((n) => Number.isFinite(n) && n > 0)
+          : [],
+      recurring_id: r.recurring_id == null || r.recurring_id === '' ? null : num(r.recurring_id),
     }
   }) satisfies Omit<TxRow, 'id' | 'created_at'>[]
 }

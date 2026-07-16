@@ -1647,3 +1647,412 @@ td.table-actions-col {
     grid-template-columns: 1fr;
   }
 }
+
+/* ------------------------- Charts (bar + donut) ------------------------- */
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.85rem;
+  margin: 1rem 0;
+}
+
+.chart-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.svg-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.chart-empty {
+  padding: 1.5rem 0;
+  text-align: center;
+}
+
+.bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  padding-top: 1rem;
+}
+
+.bar-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  height: 100%;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.bar-cols {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 100%;
+  width: 100%;
+  justify-content: center;
+}
+
+.bar-col {
+  position: relative;
+  flex: 1;
+  max-width: 22px;
+  min-height: 2px;
+  border-radius: 5px 5px 0 0;
+  transition: opacity 0.15s ease;
+}
+
+.bar-col:hover {
+  opacity: 0.82;
+}
+
+.bar-col .bar-tip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.65rem;
+  font-weight: 700;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+  color: var(--ink);
+}
+
+.bar-col:hover .bar-tip {
+  opacity: 1;
+}
+
+.bar-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.85rem;
+  font-size: 0.8rem;
+}
+
+.chart-legend--pie {
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.legend-swatch {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.legend-name {
+  flex: 1;
+}
+
+.legend-value {
+  font-weight: 700;
+  margin-left: auto;
+}
+
+.pie-chart {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pie-chart .chart-legend {
+  flex: 1;
+  min-width: 140px;
+}
+
+/* ------------------------------ Tx filters ------------------------------ */
+.tx-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.6rem;
+  margin-bottom: 0.85rem;
+  padding: 0.85rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+.tx-filters label {
+  font-size: 0.78rem;
+}
+
+.tx-filter-search {
+  grid-column: span 2;
+}
+
+.tx-filter-clear {
+  align-self: end;
+  height: fit-content;
+}
+
+/* --------------------------- Direction badges --------------------------- */
+.dir-badge {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.dir-in {
+  background: rgba(63, 157, 90, 0.18);
+  color: #2f7a45;
+}
+
+.dir-out {
+  background: rgba(201, 79, 79, 0.16);
+  color: #b3403f;
+}
+
+.dir-transfer {
+  background: rgba(123, 110, 246, 0.16);
+  color: #5b4fd0;
+}
+
+[data-theme='dark'] .dir-in {
+  color: #7fd6a0;
+}
+[data-theme='dark'] .dir-out {
+  color: #f0a0a0;
+}
+[data-theme='dark'] .dir-transfer {
+  color: #b3aaf5;
+}
+
+/* ------------------------------ Tag chips ------------------------------- */
+.tag-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+.tag-chip {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  background: var(--chip-bg);
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+
+.tag-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.tag-picker-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.tag-picker-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.tag-toggle {
+  appearance: none;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  border: 1.5px solid var(--border);
+  background: var(--chip-bg);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.tag-toggle.is-on {
+  border-color: #2d8c8c;
+  background: color-mix(in srgb, #2d8c8c 20%, var(--card));
+}
+
+.bool-field {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.bool-field input {
+  width: auto;
+}
+
+/* ------------------------------- Calendar ------------------------------- */
+.cal-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cal-month {
+  font-weight: 800;
+  min-width: 9rem;
+  text-align: center;
+}
+
+.calendar {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 0.75rem;
+}
+
+.calendar-head,
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.35rem;
+}
+
+.calendar-weekday {
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--muted);
+  padding-bottom: 0.35rem;
+}
+
+.calendar-cell {
+  appearance: none;
+  text-align: left;
+  font: inherit;
+  min-height: 4.2rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--input-bg);
+  padding: 0.3rem 0.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.calendar-cell.is-empty {
+  background: transparent;
+  border-color: transparent;
+  cursor: default;
+}
+
+.calendar-cell.has-tx {
+  border-color: #2d8c8c;
+}
+
+.calendar-cell.is-selected {
+  background: color-mix(in srgb, #2d8c8c 16%, var(--card));
+}
+
+.calendar-day {
+  font-weight: 800;
+  font-size: 0.8rem;
+}
+
+.calendar-in {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #2f7a45;
+}
+
+.calendar-out {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #b3403f;
+}
+
+[data-theme='dark'] .calendar-in {
+  color: #7fd6a0;
+}
+[data-theme='dark'] .calendar-out {
+  color: #f0a0a0;
+}
+
+.cal-day-detail {
+  margin-top: 1rem;
+}
+
+/* --------------------------------- Plan --------------------------------- */
+.plan-section {
+  margin-top: 1rem;
+}
+
+.inline-month {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.budget-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.budget-item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.budget-cat {
+  font-weight: 800;
+}
+
+.budget-bar {
+  height: 0.75rem;
+  border-radius: 999px;
+  background: var(--chip-bg);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  margin: 0.35rem 0 0.25rem;
+}
+
+.budget-bar-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #3f9d5a, #2d8c8c);
+  transition: width 0.25s ease;
+}
+
+.budget-bar-fill.is-over {
+  background: linear-gradient(90deg, #e0913a, #c94f4f);
+}
+
+.budget-item-meta {
+  font-size: 0.82rem;
+}
+
+/* ------------------------------ Data page ------------------------------- */
+.data-section {
+  margin-top: 1rem;
+}

@@ -223,9 +223,14 @@ function normalizeWebhookBundle(data: {
       date: str(r.date ?? r.ngay, new Date().toISOString().slice(0, 10)),
       amount_vnd: n(r.amount_vnd ?? r.so_tien),
       category: str(r.category ?? r.danh_muc, 'khac'),
-      direction: str(r.direction ?? r.chieu, 'out') === 'in' ? 'in' : 'out',
+      direction: (() => {
+        const d = str(r.direction ?? r.chieu, 'out')
+        return d === 'in' ? 'in' : d === 'transfer' ? 'transfer' : 'out'
+      })(),
       note: str(r.note ?? r.ghi_chu),
       asset_id: r.asset_id == null || r.asset_id === '' ? null : n(r.asset_id),
+      account_id: r.account_id == null || r.account_id === '' ? null : n(r.account_id),
+      to_account_id: r.to_account_id == null || r.to_account_id === '' ? null : n(r.to_account_id),
     })),
     salary: (data.salary ?? []).map((r) => ({
       period_ym: str(r.period_ym ?? r.ky),

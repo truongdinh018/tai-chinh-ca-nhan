@@ -1,19 +1,36 @@
 import { Button, Title } from 'animal-island-ui'
-import { useEffect, useState } from 'react'
-import { api, formatVnd, type Transaction } from '../api/client'
+import { useEffect, useMemo, useState } from 'react'
+import {
+  api,
+  formatVnd,
+  type Account,
+  type Category,
+  type Tag,
+  type Transaction,
+} from '../api/client'
 import { EntityModal, type EntityModalMode } from '../components/EntityModal'
 import { RowActions } from '../components/RowActions'
 import { TablePager } from '../components/TablePager'
+import {
+  applyTxFilters,
+  EMPTY_TX_FILTER,
+  TxFilters,
+  type TxFilterState,
+} from '../components/TxFilters'
 import { usePagination } from '../hooks/usePagination'
+import { useI18n } from '../i18n/I18nContext'
 import { notifyError, notifySuccess } from '../notify'
+import type { TxDirection } from '../store/types'
 
 type TxForm = {
   date: string
   amount_vnd: number
   category: string
-  direction: 'in' | 'out'
+  direction: TxDirection
   note: string
-  asset_id: number | null
+  account_id: number | null
+  to_account_id: number | null
+  tag_ids: number[]
 }
 
 const empty: TxForm = {
@@ -22,7 +39,9 @@ const empty: TxForm = {
   category: '',
   direction: 'out',
   note: '',
-  asset_id: null,
+  account_id: null,
+  to_account_id: null,
+  tag_ids: [],
 }
 
 function fromTx(t: Transaction): TxForm {
@@ -32,21 +51,50 @@ function fromTx(t: Transaction): TxForm {
     category: t.category,
     direction: t.direction,
     note: t.note,
-    asset_id: t.asset_id,
+    account_id: t.account_id,
+    to_account_id: t.to_account_id,
+    tag_ids: [...t.tag_ids],
   }
 }
 
 export function TransactionsPage() {
+  const { t } = useI18n()
   const [items, setItems] = useState<Transaction[]>([])
+  const [accounts, setAccounts] = useState<Account[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+  const [tags, setTags] = useState<Tag[]>([])
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [mode, setMode] = useState<EntityModalMode | null>(null)
   const [active, setActive] = useState<Transaction | null>(null)
   const [form, setForm] = useState(empty)
-  const { page, setPage, pageSize, total, totalPages, slice } = usePagination(items, 8)
+  const [filter, setFilter] = useState<TxFilterState>(EMPTY_TX_FILTER)
+
+  const filtered = useMemo(() => applyTxFilters(items, filter), [items, filter])
+  const { page, setPage, pageSize, total, totalPages, slice } = usePagination(filtered, 10)
+
+  const accountName = useMemo(() => {
+    const m = new Map<number, string>()
+    for (const a of accounts) m.set(a.id, a.name)
+    return (id: number | null) => (id == null ? '—' : (m.get(id) ?? `#${id}`))
+  }, [accounts])
+  const tagName = useMemo(() => {
+    const m = new Map<number, string>()
+    for (const g of tags) m.set(g.id, g.name)
+    return m
+  }, [tags])
 
   async function load() {
-    setItems(await api.listTransactions())
+    const [tx, acc, cat, tg] = await Promise.all([
+      api.listTransactions(),
+      api.listAccounts(),
+      api.listCategories(),
+      api.listTags(),
+    ])
+    setItems(tx)
+    setAccounts(acc)
+    setCategories(cat)
+    setTags(tg)
   }
 
   useEffect(() => {
@@ -55,7 +103,11 @@ export function TransactionsPage() {
 
   function openCreate() {
     setActive(null)
-    setForm({ ...empty, date: new Date().toISOString().slice(0, 10) })
+    setForm({
+      ...empty,
+      date: new Date().toISOString().slice(0, 10),
+      account_id: accounts[0]?.id ?? null,
+    })
     setMode('create')
   }
 
@@ -75,12 +127,18 @@ export function TransactionsPage() {
     setBusy(true)
     setError('')
     try {
+      const payload = {
+        ...form,
+        to_account_id: form.direction === 'transfer' ? form.to_account_id : null,
+        asset_id: active?.asset_id ?? null,
+        recurring_id: active?.recurring_id ?? null,
+      }
       if (mode === 'create') {
-        await api.createTransaction(form)
-        notifySuccess('Đã thêm giao dịch')
+        await api.createTransaction(payload)
+        notifySuccess(t('tx.saved'))
       } else if (mode === 'edit' && active) {
-        await api.updateTransaction(active.id, form)
-        notifySuccess('Đã cập nhật giao dịch')
+        await api.updateTransaction(active.id, payload)
+        notifySuccess(t('tx.updated'))
       }
       setMode(null)
       setActive(null)
@@ -88,7 +146,7 @@ export function TransactionsPage() {
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
       setError(msg)
-      notifyError('Không lưu được giao dịch', msg)
+      notifyError(t('tx.saveFail'), msg)
     } finally {
       setBusy(false)
     }
@@ -100,14 +158,14 @@ export function TransactionsPage() {
     setError('')
     try {
       await api.deleteTransaction(active.id)
-      notifySuccess('Đã xóa giao dịch', active.date)
+      notifySuccess(t('tx.deleted'), active.date)
       setMode(null)
       setActive(null)
       await load()
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
       setError(msg)
-      notifyError('Không xóa được giao dịch', msg)
+      notifyError(t('tx.deleteFail'), msg)
     } finally {
       setBusy(false)
     }
@@ -115,58 +173,108 @@ export function TransactionsPage() {
 
   const modalTitle =
     mode === 'create'
-      ? 'Thêm giao dịch'
+      ? t('tx.add')
       : mode === 'view'
-        ? 'Xem giao dịch'
+        ? t('tx.view')
         : mode === 'edit'
-          ? 'Sửa giao dịch'
-          : 'Xóa giao dịch'
+          ? t('tx.edit')
+          : t('tx.delete')
+
+  function dirLabel(d: TxDirection) {
+    return d === 'in' ? t('tx.in') : d === 'out' ? t('tx.out') : t('tx.transfer')
+  }
 
   return (
     <div className="page">
       <div className="page-toolbar">
-        <Title size="middle">Giao dịch</Title>
+        <Title size="middle">{t('tab.tx')}</Title>
         <Button type="primary" onClick={openCreate}>
-          Thêm
+          {t('common.add')}
         </Button>
       </div>
       {error && <p className="error">{error}</p>}
+
+      <TxFilters
+        filter={filter}
+        onChange={setFilter}
+        accounts={accounts}
+        categories={categories}
+        labels={{
+          search: t('tx.filter.search'),
+          all: t('common.all'),
+          category: t('tx.category'),
+          account: t('tx.account'),
+          direction: t('tx.dir'),
+          in: t('tx.in'),
+          out: t('tx.out'),
+          transfer: t('tx.transfer'),
+          from: t('tx.filter.from'),
+          to: t('tx.filter.to'),
+          amountMin: t('tx.filter.amountMin'),
+          amountMax: t('tx.filter.amountMax'),
+          clear: t('tx.filter.clear'),
+        }}
+      />
 
       <div className="table-wrap">
         <table>
           <thead>
             <tr>
-              <th>Ngày</th>
-              <th>Chiều</th>
-              <th>Số tiền</th>
-              <th>Danh mục</th>
-              <th className="table-actions-col" aria-label="Thao tác" />
+              <th>{t('tx.date')}</th>
+              <th>{t('tx.dir')}</th>
+              <th>{t('tx.amount')}</th>
+              <th>{t('tx.category')}</th>
+              <th>{t('tx.account')}</th>
+              <th className="table-actions-col" aria-label={t('common.actions')} />
             </tr>
           </thead>
           <tbody>
-            {slice.map((t) => (
-              <tr
-                key={t.id}
-                className="table-row-click"
-                onClick={() => openModal('view', t)}
-              >
-                <td>{t.date}</td>
-                <td>{t.direction === 'in' ? 'Thu' : 'Chi'}</td>
-                <td>{formatVnd(t.amount_vnd)}</td>
-                <td>{t.category || t.note}</td>
+            {slice.map((tx) => (
+              <tr key={tx.id} className="table-row-click" onClick={() => openModal('view', tx)}>
+                <td>{tx.date}</td>
+                <td>
+                  <span className={`dir-badge dir-${tx.direction}`}>{dirLabel(tx.direction)}</span>
+                </td>
+                <td>{formatVnd(tx.amount_vnd)}</td>
+                <td>
+                  {tx.category || tx.note}
+                  {tx.tag_ids.length ? (
+                    <div className="tag-chips">
+                      {tx.tag_ids.map((id) =>
+                        tagName.has(id) ? (
+                          <span key={id} className="tag-chip">
+                            {tagName.get(id)}
+                          </span>
+                        ) : null,
+                      )}
+                    </div>
+                  ) : null}
+                </td>
+                <td>
+                  {tx.direction === 'transfer'
+                    ? `${accountName(tx.account_id)} → ${accountName(tx.to_account_id)}`
+                    : accountName(tx.account_id)}
+                </td>
                 <td
                   className="table-actions-col"
                   onClick={(e) => e.stopPropagation()}
                   onKeyDown={(e) => e.stopPropagation()}
                 >
                   <RowActions
-                    onView={() => openModal('view', t)}
-                    onEdit={() => openModal('edit', t)}
-                    onDelete={() => openModal('delete', t)}
+                    onView={() => openModal('view', tx)}
+                    onEdit={() => openModal('edit', tx)}
+                    onDelete={() => openModal('delete', tx)}
                   />
                 </td>
               </tr>
             ))}
+            {slice.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="muted">
+                  {t('tx.noMatch')}
+                </td>
+              </tr>
+            ) : null}
           </tbody>
         </table>
       </div>
@@ -188,90 +296,162 @@ export function TransactionsPage() {
         onConfirmDelete={onConfirmDelete}
       >
         {mode === 'delete' && active ? (
-          <p>
-            Xóa giao dịch ngày <strong>{active.date}</strong> ({formatVnd(active.amount_vnd)})?
-          </p>
+          <p>{t('tx.deleteConfirm', { date: active.date, amount: formatVnd(active.amount_vnd) })}</p>
         ) : null}
-        {mode === 'view' && active ? <TxDetail item={active} /> : null}
+        {mode === 'view' && active ? (
+          <dl className="detail-list">
+            <div>
+              <dt>{t('tx.date')}</dt>
+              <dd>{active.date}</dd>
+            </div>
+            <div>
+              <dt>{t('tx.dir')}</dt>
+              <dd>{dirLabel(active.direction)}</dd>
+            </div>
+            <div>
+              <dt>{t('tx.amount')}</dt>
+              <dd>{formatVnd(active.amount_vnd)}</dd>
+            </div>
+            <div>
+              <dt>{t('tx.category')}</dt>
+              <dd>{active.category || '—'}</dd>
+            </div>
+            <div>
+              <dt>{t('tx.account')}</dt>
+              <dd>
+                {active.direction === 'transfer'
+                  ? `${accountName(active.account_id)} → ${accountName(active.to_account_id)}`
+                  : accountName(active.account_id)}
+              </dd>
+            </div>
+            <div>
+              <dt>{t('tx.tags')}</dt>
+              <dd>{active.tag_ids.map((id) => tagName.get(id)).filter(Boolean).join(', ') || '—'}</dd>
+            </div>
+            <div className="span-2">
+              <dt>{t('common.note')}</dt>
+              <dd>{active.note || '—'}</dd>
+            </div>
+          </dl>
+        ) : null}
         {mode === 'create' || mode === 'edit' ? (
           <div className="grid-form modal-form">
-            <TxFields form={form} setForm={setForm} />
+            <label>
+              {t('tx.date')}
+              <input
+                type="date"
+                value={form.date}
+                onChange={(e) => setForm({ ...form, date: e.target.value })}
+                required
+              />
+            </label>
+            <label>
+              {t('tx.dir')}
+              <select
+                value={form.direction}
+                onChange={(e) => setForm({ ...form, direction: e.target.value as TxDirection })}
+              >
+                <option value="in">{t('tx.in')}</option>
+                <option value="out">{t('tx.out')}</option>
+                <option value="transfer">{t('tx.transfer')}</option>
+              </select>
+            </label>
+            <label>
+              {t('tx.amount')}
+              <input
+                type="number"
+                value={form.amount_vnd}
+                onChange={(e) => setForm({ ...form, amount_vnd: Number(e.target.value) })}
+                required
+              />
+            </label>
+            <label>
+              {form.direction === 'transfer' ? t('tx.fromAccount') : t('tx.account')}
+              <select
+                value={form.account_id == null ? '' : String(form.account_id)}
+                onChange={(e) =>
+                  setForm({ ...form, account_id: e.target.value === '' ? null : Number(e.target.value) })
+                }
+              >
+                <option value="">—</option>
+                {accounts.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {form.direction === 'transfer' ? (
+              <label>
+                {t('tx.toAccount')}
+                <select
+                  value={form.to_account_id == null ? '' : String(form.to_account_id)}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      to_account_id: e.target.value === '' ? null : Number(e.target.value),
+                    })
+                  }
+                >
+                  <option value="">—</option>
+                  {accounts.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : (
+              <label>
+                {t('tx.category')}
+                <input
+                  list="tx-category-list"
+                  value={form.category}
+                  onChange={(e) => setForm({ ...form, category: e.target.value })}
+                />
+                <datalist id="tx-category-list">
+                  {categories
+                    .filter((c) => c.kind === (form.direction === 'in' ? 'in' : 'out'))
+                    .map((c) => (
+                      <option key={c.id} value={c.name} />
+                    ))}
+                </datalist>
+              </label>
+            )}
+            {tags.length ? (
+              <div className="span-2 tag-picker">
+                <span className="tag-picker-label">{t('tx.tags')}</span>
+                <div className="tag-picker-list">
+                  {tags.map((g) => {
+                    const on = form.tag_ids.includes(g.id)
+                    return (
+                      <button
+                        key={g.id}
+                        type="button"
+                        className={`tag-toggle${on ? ' is-on' : ''}`}
+                        onClick={() =>
+                          setForm({
+                            ...form,
+                            tag_ids: on
+                              ? form.tag_ids.filter((x) => x !== g.id)
+                              : [...form.tag_ids, g.id],
+                          })
+                        }
+                      >
+                        {g.name}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            ) : null}
+            <label className="span-2">
+              {t('common.note')}
+              <input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
+            </label>
           </div>
         ) : null}
       </EntityModal>
     </div>
-  )
-}
-
-function TxFields({ form, setForm }: { form: TxForm; setForm: (f: TxForm) => void }) {
-  return (
-    <>
-      <label>
-        Ngày
-        <input
-          type="date"
-          value={form.date}
-          onChange={(e) => setForm({ ...form, date: e.target.value })}
-          required
-        />
-      </label>
-      <label>
-        Số tiền
-        <input
-          type="number"
-          value={form.amount_vnd}
-          onChange={(e) => setForm({ ...form, amount_vnd: Number(e.target.value) })}
-          required
-        />
-      </label>
-      <label>
-        Chiều
-        <select
-          value={form.direction}
-          onChange={(e) => setForm({ ...form, direction: e.target.value as 'in' | 'out' })}
-        >
-          <option value="in">Thu</option>
-          <option value="out">Chi</option>
-        </select>
-      </label>
-      <label>
-        Danh mục
-        <input
-          value={form.category}
-          onChange={(e) => setForm({ ...form, category: e.target.value })}
-        />
-      </label>
-      <label className="span-2">
-        Ghi chú
-        <input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
-      </label>
-    </>
-  )
-}
-
-function TxDetail({ item }: { item: Transaction }) {
-  return (
-    <dl className="detail-list">
-      <div>
-        <dt>Ngày</dt>
-        <dd>{item.date}</dd>
-      </div>
-      <div>
-        <dt>Chiều</dt>
-        <dd>{item.direction === 'in' ? 'Thu' : 'Chi'}</dd>
-      </div>
-      <div>
-        <dt>Số tiền</dt>
-        <dd>{formatVnd(item.amount_vnd)}</dd>
-      </div>
-      <div>
-        <dt>Danh mục</dt>
-        <dd>{item.category || '—'}</dd>
-      </div>
-      <div className="span-2">
-        <dt>Ghi chú</dt>
-        <dd>{item.note || '—'}</dd>
-      </div>
-    </dl>
   )
 }

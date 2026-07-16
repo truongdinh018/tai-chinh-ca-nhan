@@ -1,6 +1,17 @@
 /** Hash routes: `#/dash`, `#/assets`, `#/tools/fire` */
 
-export const APP_TABS = ['dash', 'assets', 'tx', 'salary', 'debts', 'tools', 'export'] as const
+export const APP_TABS = [
+  'dash',
+  'assets',
+  'accounts',
+  'tx',
+  'calendar',
+  'salary',
+  'debts',
+  'plan',
+  'tools',
+  'data',
+] as const
 
 export type AppTab = (typeof APP_TABS)[number]
 
@@ -18,8 +29,8 @@ export function parseHash(hash: string): RouteState {
   if (!raw) return { tab: 'dash', toolId: null }
 
   const [tabPartRaw = '', toolPart = ''] = raw.split('/')
-  // Old hash `#/sync` → export tab
-  const tabPart = tabPartRaw === 'sync' ? 'export' : tabPartRaw
+  // Old hashes `#/sync` and `#/export` → merged data tab
+  const tabPart = tabPartRaw === 'sync' || tabPartRaw === 'export' ? 'data' : tabPartRaw
   const tab = isAppTab(tabPart) ? tabPart : 'dash'
   const toolId = tab === 'tools' && toolPart ? toolPart : null
   return { tab, toolId }

@@ -69,9 +69,11 @@ export type ImportBundle = {
     date: string
     amount_vnd: number
     category: string
-    direction: 'in' | 'out'
+    direction: 'in' | 'out' | 'transfer'
     note: string
     asset_id: number | null
+    account_id?: number | null
+    to_account_id?: number | null
   }[]
   salary?: {
     period_ym: string
@@ -139,14 +141,21 @@ export function csvToBundle(csvText: string, sheetHint?: string): ImportBundle {
       note: r.note || r.ghi_chu || '',
     }))
   } else if (kind === 'transactions') {
-    bundle.transactions = rows.map((r) => ({
-      date: r.date || r.ngay || new Date().toISOString().slice(0, 10),
-      amount_vnd: num(r.amount_vnd ?? r.so_tien),
-      category: r.category || r.danh_muc || 'khac',
-      direction: (r.direction || r.chieu || 'out') === 'in' ? 'in' : 'out',
-      note: r.note || r.ghi_chu || '',
-      asset_id: r.asset_id ? num(r.asset_id) : null,
-    }))
+    bundle.transactions = rows.map((r) => {
+      const dirRaw = (r.direction || r.chieu || 'out').toLowerCase()
+      const direction: 'in' | 'out' | 'transfer' =
+        dirRaw === 'in' ? 'in' : dirRaw === 'transfer' || dirRaw === 'chuyen' ? 'transfer' : 'out'
+      return {
+        date: r.date || r.ngay || new Date().toISOString().slice(0, 10),
+        amount_vnd: num(r.amount_vnd ?? r.so_tien),
+        category: r.category || r.danh_muc || 'khac',
+        direction,
+        note: r.note || r.ghi_chu || '',
+        asset_id: r.asset_id ? num(r.asset_id) : null,
+        account_id: r.account_id ? num(r.account_id) : null,
+        to_account_id: r.to_account_id ? num(r.to_account_id) : null,
+      }
+    })
   }
   return bundle
 }

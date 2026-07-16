@@ -1,7 +1,17 @@
 import type { FinanceState } from '../store/types'
 import { toCsv } from '../sheets/csv'
 
-export type ExportScope = 'all' | 'assets' | 'transactions' | 'salary' | 'debts'
+export type ExportScope =
+  | 'all'
+  | 'assets'
+  | 'transactions'
+  | 'salary'
+  | 'debts'
+  | 'accounts'
+  | 'categories'
+  | 'tags'
+  | 'recurring'
+  | 'budgets'
 
 export type ExportTable = {
   key: Exclude<ExportScope, 'all'>
@@ -25,8 +35,25 @@ const DEFS: Array<{
   {
     key: 'transactions',
     title: 'Giao dịch',
-    headers: ['id', 'date', 'amount_vnd', 'category', 'direction', 'note', 'asset_id', 'created_at'],
-    pick: (s) => s.transactions as unknown as Record<string, unknown>[],
+    headers: [
+      'id',
+      'date',
+      'amount_vnd',
+      'category',
+      'direction',
+      'note',
+      'asset_id',
+      'account_id',
+      'to_account_id',
+      'tag_ids',
+      'recurring_id',
+      'created_at',
+    ],
+    pick: (s) =>
+      s.transactions.map((t) => ({
+        ...t,
+        tag_ids: (t.tag_ids ?? []).join('|'),
+      })) as unknown as Record<string, unknown>[],
   },
   {
     key: 'salary',
@@ -39,6 +66,48 @@ const DEFS: Array<{
     title: 'Nợ',
     headers: ['id', 'name', 'principal_vnd', 'balance_vnd', 'rate_year', 'note', 'updated_at'],
     pick: (s) => s.debts as unknown as Record<string, unknown>[],
+  },
+  {
+    key: 'accounts',
+    title: 'Tài khoản',
+    headers: ['id', 'name', 'kind', 'opening_balance_vnd', 'note', 'archived', 'updated_at'],
+    pick: (s) => s.accounts as unknown as Record<string, unknown>[],
+  },
+  {
+    key: 'categories',
+    title: 'Danh mục',
+    headers: ['id', 'name', 'kind', 'parent_id', 'icon', 'updated_at'],
+    pick: (s) => s.categories as unknown as Record<string, unknown>[],
+  },
+  {
+    key: 'tags',
+    title: 'Nhãn',
+    headers: ['id', 'name', 'color', 'updated_at'],
+    pick: (s) => s.tags as unknown as Record<string, unknown>[],
+  },
+  {
+    key: 'recurring',
+    title: 'Định kỳ',
+    headers: [
+      'id',
+      'name',
+      'amount_vnd',
+      'category',
+      'direction',
+      'account_id',
+      'to_account_id',
+      'day_of_month',
+      'note',
+      'active',
+      'updated_at',
+    ],
+    pick: (s) => s.recurring as unknown as Record<string, unknown>[],
+  },
+  {
+    key: 'budgets',
+    title: 'Ngân sách',
+    headers: ['id', 'category', 'amount_vnd', 'note', 'updated_at'],
+    pick: (s) => s.budgets as unknown as Record<string, unknown>[],
   },
 ]
 
@@ -74,5 +143,5 @@ export function tablesToCsvBlob(tables: ExportTable[]): Blob {
 }
 
 export function countLabel(state: FinanceState): string {
-  return `${state.assets.length} TS · ${state.transactions.length} GD · ${state.salary.length} lương · ${state.debts.length} nợ`
+  return `${state.assets.length} TS · ${state.accounts.length} TK · ${state.transactions.length} GD · ${state.salary.length} lương · ${state.debts.length} nợ`
 }

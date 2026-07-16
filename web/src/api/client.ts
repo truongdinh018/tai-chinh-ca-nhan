@@ -3,7 +3,16 @@
  * Data in IndexedDB; optional Google Sheets sync via public link / Apps Script.
  */
 
-import { clearState, loadState } from '../store/db'
+import {
+  clearState,
+  disableLock,
+  enableLock,
+  isLocked,
+  loadState,
+  lockSession,
+  lockStatus,
+  unlock,
+} from '../store/db'
 import * as q from '../store/queries'
 import { csvToBundle, toCsv } from '../sheets/csv'
 import {
@@ -18,6 +27,12 @@ export type Asset = q.AssetRow
 export type Transaction = q.TxRow
 export type Salary = q.SalaryRow
 export type Debt = q.DebtRow
+export type Account = q.AccountRow
+export type AccountWithBalance = Awaited<ReturnType<typeof q.listAccountsWithBalance>>[number]
+export type Category = q.CategoryRow
+export type Tag = q.TagRow
+export type Recurring = q.RecurringRow
+export type Budget = q.BudgetRow
 export type Summary = Awaited<ReturnType<typeof q.summary>>
 export type ToolInfo = (typeof TOOL_CATALOG)[number]
 export type SheetsSettings = q.SheetsSettings
@@ -28,10 +43,14 @@ function sampleAssetsUrl(): string {
 }
 
 export const api = {
-  /** Always ready — kept for compatibility. */
+  /** Always ready when unlocked — kept for compatibility. */
   status: async () => {
+    const { locked, unlocked } = await lockStatus()
+    if (locked && !unlocked) {
+      return { setup_required: false, unlocked: false, locked: true }
+    }
     await loadState()
-    return { setup_required: false, unlocked: true }
+    return { setup_required: false, unlocked: true, locked }
   },
 
   summary: () => q.summary(),
@@ -105,6 +124,80 @@ export const api = {
     await q.deleteDebt(id)
     return { ok: true }
   },
+
+  listAccounts: () => q.listAccounts(),
+  listAccountsWithBalance: () => q.listAccountsWithBalance(),
+  createAccount: (data: Omit<Account, 'id' | 'updated_at'>) => q.createAccount(data),
+  updateAccount: async (id: number, data: Omit<Account, 'id' | 'updated_at'>) => {
+    const row = await q.updateAccount(id, data)
+    if (!row) throw new Error('Account not found')
+    return row
+  },
+  deleteAccount: async (id: number) => {
+    await q.deleteAccount(id)
+    return { ok: true }
+  },
+
+  listCategories: () => q.listCategories(),
+  createCategory: (data: Omit<Category, 'id' | 'updated_at'>) => q.createCategory(data),
+  updateCategory: async (id: number, data: Omit<Category, 'id' | 'updated_at'>) => {
+    const row = await q.updateCategory(id, data)
+    if (!row) throw new Error('Category not found')
+    return row
+  },
+  deleteCategory: async (id: number) => {
+    await q.deleteCategory(id)
+    return { ok: true }
+  },
+
+  listTags: () => q.listTags(),
+  createTag: (data: Omit<Tag, 'id' | 'updated_at'>) => q.createTag(data),
+  updateTag: async (id: number, data: Omit<Tag, 'id' | 'updated_at'>) => {
+    const row = await q.updateTag(id, data)
+    if (!row) throw new Error('Tag not found')
+    return row
+  },
+  deleteTag: async (id: number) => {
+    await q.deleteTag(id)
+    return { ok: true }
+  },
+
+  listRecurring: () => q.listRecurring(),
+  createRecurring: (data: Omit<Recurring, 'id' | 'updated_at'>) => q.createRecurring(data),
+  updateRecurring: async (id: number, data: Omit<Recurring, 'id' | 'updated_at'>) => {
+    const row = await q.updateRecurring(id, data)
+    if (!row) throw new Error('Recurring template not found')
+    return row
+  },
+  deleteRecurring: async (id: number) => {
+    await q.deleteRecurring(id)
+    return { ok: true }
+  },
+  generateRecurringForMonth: (ym: string) => q.generateRecurringForMonth(ym),
+
+  listBudgets: () => q.listBudgets(),
+  createBudget: (data: Omit<Budget, 'id' | 'updated_at'>) => q.createBudget(data),
+  updateBudget: async (id: number, data: Omit<Budget, 'id' | 'updated_at'>) => {
+    const row = await q.updateBudget(id, data)
+    if (!row) throw new Error('Budget not found')
+    return row
+  },
+  deleteBudget: async (id: number) => {
+    await q.deleteBudget(id)
+    return { ok: true }
+  },
+
+  spendByCategory: (ym?: string) => q.spendByCategory(ym),
+  monthlyCashflow: (months?: number) => q.monthlyCashflow(months),
+  budgetProgress: (ym: string) => q.budgetProgress(ym),
+
+  // WebCrypto passphrase lock for the IndexedDB blob.
+  lockStatus: () => lockStatus(),
+  isLocked: () => isLocked(),
+  unlock: (passphrase: string) => unlock(passphrase),
+  enableLock: (passphrase: string) => enableLock(passphrase),
+  disableLock: () => disableLock(),
+  lockSession: () => lockSession(),
 
   listTools: async () => TOOL_CATALOG,
 
@@ -200,7 +293,16 @@ export const api = {
         rows: snap.assets as unknown as Record<string, unknown>[],
       },
       transactions: {
-        headers: ['date', 'amount_vnd', 'category', 'direction', 'note', 'asset_id'],
+        headers: [
+          'date',
+          'amount_vnd',
+          'category',
+          'direction',
+          'note',
+          'asset_id',
+          'account_id',
+          'to_account_id',
+        ],
         rows: snap.transactions as unknown as Record<string, unknown>[],
       },
       salary: {

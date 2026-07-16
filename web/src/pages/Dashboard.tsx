@@ -2,23 +2,41 @@ import { Card, Tag, Title } from 'animal-island-ui'
 import { useEffect, useMemo, useState } from 'react'
 import { api, formatVnd, type Summary } from '../api/client'
 import { Hint } from '../components/Hint'
+import { PieChart, SimpleBarChart, paletteColor } from '../components/charts'
 import { useI18n } from '../i18n/I18nContext'
 import { TOOL_META, type ToolCategoryKey } from '../tools/meta'
+import type { CategorySpend, MonthlyFlow } from '../store/queries'
 
 type Props = {
   onOpenTool?: (toolId: string) => void
 }
 
+function compactVnd(n: number): string {
+  if (Math.abs(n) >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}tr`
+  if (Math.abs(n) >= 1_000) return `${Math.round(n / 1_000)}k`
+  return String(Math.round(n))
+}
+
 export function Dashboard({ onOpenTool }: Props) {
   const { t } = useI18n()
   const [summary, setSummary] = useState<Summary | null>(null)
+  const [spend, setSpend] = useState<CategorySpend[]>([])
+  const [flow, setFlow] = useState<MonthlyFlow[]>([])
   const [error, setError] = useState('')
   const [filter, setFilter] = useState<ToolCategoryKey | 'all'>('all')
 
   async function load() {
     setError('')
     try {
-      setSummary(await api.summary())
+      const ym = new Date().toISOString().slice(0, 7)
+      const [s, sp, fl] = await Promise.all([
+        api.summary(),
+        api.spendByCategory(ym),
+        api.monthlyCashflow(6),
+      ])
+      setSummary(s)
+      setSpend(sp)
+      setFlow(fl)
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
     }
@@ -27,6 +45,28 @@ export function Dashboard({ onOpenTool }: Props) {
   useEffect(() => {
     void load()
   }, [])
+
+  const pieData = useMemo(
+    () =>
+      spend.slice(0, 8).map((s, i) => ({
+        label: s.category,
+        value: s.total,
+        color: paletteColor(i),
+      })),
+    [spend],
+  )
+
+  const barData = useMemo(
+    () =>
+      flow.map((f) => ({
+        label: f.ym.slice(5),
+        series: [
+          { name: t('dash.income'), value: f.income, color: '#3f9d5a' },
+          { name: t('dash.expense'), value: f.expense, color: '#c94f4f' },
+        ],
+      })),
+    [flow, t],
+  )
 
   const categories = useMemo(() => {
     const keys = [...new Set(TOOL_META.map((m) => m.categoryKey))]
@@ -77,6 +117,21 @@ export function Dashboard({ onOpenTool }: Props) {
               salary: summary?.salary_count ?? 0,
             })}
           </p>
+        </Card>
+      </div>
+
+      <div className="chart-grid">
+        <Card color="app-teal" pattern="app-teal" className="chart-card">
+          <div className="stat-head">
+            <Tag color="app-teal">{t('dash.spendByCat')}</Tag>
+          </div>
+          <PieChart data={pieData} formatValue={formatVnd} emptyText={t('dash.noData')} />
+        </Card>
+        <Card color="app-blue" pattern="app-blue" className="chart-card">
+          <div className="stat-head">
+            <Tag color="app-blue">{t('dash.cashflow')}</Tag>
+          </div>
+          <SimpleBarChart data={barData} formatValue={compactVnd} emptyText={t('dash.noData')} />
         </Card>
       </div>
 

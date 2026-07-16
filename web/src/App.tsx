@@ -13,13 +13,17 @@ import {
   type RouteState,
 } from './navigation/route'
 import { notifyError, notifySuccess } from './notify'
+import { AccountsPage } from './pages/AccountsPage'
 import { AssetsPage } from './pages/AssetsPage'
+import { CalendarPage } from './pages/CalendarPage'
 import { Dashboard } from './pages/Dashboard'
-import { ExportPage } from './pages/ExportPage'
+import { DataPage } from './pages/DataPage'
 import { DebtsPage } from './pages/DebtsPage'
+import { PlanPage } from './pages/PlanPage'
 import { SalaryPage } from './pages/SalaryPage'
 import { ToolsPage } from './pages/ToolsPage'
 import { TransactionsPage } from './pages/TransactionsPage'
+import { UnlockScreen } from './pages/UnlockScreen'
 import { useTheme } from './theme/ThemeContext'
 import './App.css'
 
@@ -29,6 +33,8 @@ export default function App() {
   const { t, locale, setLocale } = useI18n()
   const { theme, setTheme } = useTheme()
   const [ready, setReady] = useState(false)
+  const [needsUnlock, setNeedsUnlock] = useState(false)
+  const [lockEnabled, setLockEnabled] = useState(false)
   const [error, setError] = useState('')
   const [resetOpen, setResetOpen] = useState(false)
   const [resetBusy, setResetBusy] = useState(false)
@@ -82,13 +88,22 @@ export default function App() {
   )
 
   useEffect(() => {
-    void api
-      .status()
-      .then(() => setReady(true))
-      .catch((e) => {
+    void (async () => {
+      try {
+        const { locked, unlocked } = await api.lockStatus()
+        setLockEnabled(locked)
+        if (locked && !unlocked) {
+          setNeedsUnlock(true)
+          setReady(true)
+          return
+        }
+        await api.status()
+        setReady(true)
+      } catch (e) {
         setError(e instanceof Error ? e.message : String(e))
         setReady(true)
-      })
+      }
+    })()
   }, [])
 
   useEffect(() => {
@@ -113,6 +128,19 @@ export default function App() {
     return (
       <Cursor>
         <div className="boot-error muted">{t('app.booting')}</div>
+      </Cursor>
+    )
+  }
+
+  if (needsUnlock) {
+    return (
+      <Cursor>
+        <UnlockScreen
+          onUnlocked={() => {
+            setNeedsUnlock(false)
+            setLockEnabled(true)
+          }}
+        />
       </Cursor>
     )
   }
@@ -158,15 +186,18 @@ export default function App() {
       children: <Dashboard onOpenTool={openTool} />,
     },
     { key: 'assets', label: t('tab.assets'), children: <AssetsPage /> },
+    { key: 'accounts', label: t('tab.accounts'), children: <AccountsPage /> },
     { key: 'tx', label: t('tab.tx'), children: <TransactionsPage /> },
+    { key: 'calendar', label: t('tab.calendar'), children: <CalendarPage /> },
     { key: 'salary', label: t('tab.salary'), children: <SalaryPage /> },
     { key: 'debts', label: t('tab.debts'), children: <DebtsPage /> },
+    { key: 'plan', label: t('tab.plan'), children: <PlanPage /> },
     {
       key: 'tools',
       label: t('tab.tools'),
       children: <ToolsPage focusToolId={focusToolId} onToolNavigate={onToolNavigate} />,
     },
-    { key: 'export', label: t('tab.export'), children: <ExportPage /> },
+    { key: 'data', label: t('tab.data'), children: <DataPage onLockChange={setLockEnabled} /> },
   ]
 
   return (
@@ -230,6 +261,20 @@ export default function App() {
               >
                 <span aria-hidden>↥</span>
               </button>
+              {lockEnabled ? (
+                <button
+                  type="button"
+                  className="prefs-icon-btn"
+                  onClick={() => {
+                    api.lockSession()
+                    setNeedsUnlock(true)
+                  }}
+                  title={t('app.lockNow')}
+                  aria-label={t('app.lockNow')}
+                >
+                  <span aria-hidden>🔒</span>
+                </button>
+              ) : null}
               <button
                 type="button"
                 className="prefs-icon-btn prefs-icon-btn--danger"
