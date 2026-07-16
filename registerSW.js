@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/tai-chinh-ca-nhan/sw.js', { scope: '/tai-chinh-ca-nhan/' })})}
