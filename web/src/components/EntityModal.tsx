@@ -17,6 +17,18 @@ type Props = {
   width?: number | string
 }
 
+/** Keep dialogs inside the phone viewport (no horizontal overflow). */
+function fitModalWidth(preferred: number | string | undefined, mode: EntityModalMode | null) {
+  const fallback = mode === 'delete' ? 420 : 560
+  if (preferred == null) {
+    return `min(${fallback}px, calc(100vw - 1.5rem))`
+  }
+  if (typeof preferred === 'number') {
+    return `min(${preferred}px, calc(100vw - 1.5rem))`
+  }
+  return preferred
+}
+
 export function EntityModal({
   open,
   mode,
@@ -69,7 +81,7 @@ export function EntityModal({
       footer={footer}
       typewriter={false}
       maskClosable={!busy}
-      width={width ?? (mode === 'delete' ? 420 : 560)}
+      width={fitModalWidth(width, mode)}
     >
       {children}
     </Modal>
